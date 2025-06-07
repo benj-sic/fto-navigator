@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # FTO Navigator MVP
 
 A patent freedom-to-operate analysis tool designed for academic researchers.
@@ -88,6 +87,3 @@ This project is designed to teach:
 ## License
 
 [Choose appropriate license - MIT recommended for learning projects]
-=======
-# fto-navigator
->>>>>>> 7342c95c3fc3454375c95734c7da98ff2b634a7b
