@@ -12,7 +12,7 @@ I'm building an MVP of FTO Navigator - a patent freedom-to-operate analysis tool
 - **Key Features:** Guided input, automated patent search, risk assessment, educational report generation
 - **Tech Approach:** Bootstrap with open source tools, focus on MVP functionality
 
-**MY CODING LEVEL:** [Describe your current experience - beginner/intermediate/specific languages you know]
+**MY CODING LEVEL:** Beginner
 
 **DEVELOPMENT APPROACH I WANT:**
 1. **Structured Learning:** Each session should teach me specific concepts while building features
@@ -29,10 +29,10 @@ I'm building an MVP of FTO Navigator - a patent freedom-to-operate analysis tool
 - End with testing what we built and planning next steps
 - Ask if I'm ready to proceed or need clarification at each step
 
-**CURRENT STATUS:** [New project / Continuing from previous session - if continuing, briefly describe what you've built so far]
+**CURRENT STATUS:** New project
 
-**GITHUB REPO:** [Your repo URL if you've created one, or say "not created yet"]
+**GITHUB REPO:** https://github.com/benj-sic/fto-navigator
 
-**TODAY'S FOCUS:** [What you want to work on this session, or say "help me plan the overall architecture and first steps"]
+**TODAY'S FOCUS:** Help me plan the overall architecture and first steps
 
 Please help me plan the next phase of development. Start by assessing where I am and proposing what we should tackle next. Before we begin coding, confirm the approach and check if I have questions.
