@@ -2,3 +2,31 @@
 
 # Google Cloud Service Account Key
 google-cloud-key.json
+
+# IDE and environment files
+.idea/
+.vscode/
+.DS_Store
+venv/
+#/
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Node artifacts
+/frontend/node_modules
+/frontend/dist
+/frontend/.DS_Store
+/frontend/.vite/
+
+# Log and data files
+*.log
+*.sqlite3
+*.json

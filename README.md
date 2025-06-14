@@ -1,89 +1,87 @@
-# FTO Navigator MVP
+# FTO Navigator: Freedom-to-Operate Analysis for Researchers
 
-A patent freedom-to-operate analysis tool designed for academic researchers.
+FTO Navigator is a web-based tool designed to help researchers perform Freedom-to-Operate (FTO) analysis by searching for potential patent conflicts. Users can input their research details, and the application will analyze the USPTO patent database to generate a risk assessment report.
 
-## Current Status: [STARTING/IN_PROGRESS/FEATURE_COMPLETE]
+## ✨ Features
 
-**Last Updated:** [Date]
-**Current Sprint:** [What you're working on this week]
+-   **Intuitive Research Form**: Submit your research title, description, field of study, and relevant keywords to start the analysis.
+-   **Automated Patent Search**: The backend service queries the USPTO database for relevant patents based on your input.
+-   **Risk Assessment**: Analyzes retrieved patents to determine a risk level (HIGH, MEDIUM, LOW) based on factors like keyword overlap, classification match, and recency.
+-   **Comprehensive Results**: View an executive summary, a detailed list of relevant patents, and actionable recommendations in a clear, tabbed interface.
+-   **Report Generation**: Download the complete analysis as a PDF or JSON file for offline viewing and record-keeping.
 
-### Completed Features ✅
-- [ ] Project setup and architecture planning
-- [ ] Backend API structure
-- [ ] Research input form
-- [ ] Patent search integration
-- [ ] Risk assessment algorithm
-- [ ] Report generation
-- [ ] Frontend user interface
-- [ ] End-to-end testing
+## ⚙️ Tech Stack
 
-### Next Priorities 🎯
-1. [Next immediate task]
-2. [Following task]
-3. [Third priority]
+-   **Frontend**: React, Vite, Axios, react-icons
+-   **Backend**: Python, FastAPI, SQLAlchemy, aiosqlite
+-   **PDF Generation**: jsPDF, jspdf-autotable
 
-### Current Blockers 🚫
-- [Any issues preventing progress]
+## 📂 Project Structure
+/
+├── backend/         # FastAPI backend
+│   ├── main.py      # Main application entrypoint
+│   ├── database.py  # Database setup and models
+│   └── ...
+├── frontend/        # React frontend
+│   ├── src/
+│   │   ├── App.jsx  # Main React component
+│   │   └── ...
+│   └── ...
+└── README.md
 
-## Tech Stack
+## 🚀 Getting Started
 
-**Backend:** [FastAPI/Express/etc.]
-**Frontend:** [React/Vue/etc.]
-**Database:** [SQLite/PostgreSQL/etc.]
-**APIs:** [OpenAI, Google Patents, etc.]
+### Prerequisites
 
-## Development Setup
+-   Node.js and npm
+-   Python 3.8+ and pip
 
-```bash
-# Clone repository
-git clone https://github.com/yourusername/fto-navigator.git
-cd fto-navigator
+### Backend Setup
 
-# Backend setup
-cd backend
-[setup commands]
+1.  **Navigate to the backend directory:**
+    ```bash
+    cd backend
+    ```
 
-# Frontend setup
-cd ../frontend
-[setup commands]
-```
+2.  **Create and activate a virtual environment:**
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+    ```
 
-## Architecture Overview
+3.  **Install the required Python packages:**
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-```
-User Input → Text Analysis → Patent Search → Risk Assessment → Report Generation
-```
+4.  **Run the FastAPI server:**
+    ```bash
+    uvicorn main:app --reload
+    ```
+    The backend will be running at `http://127.0.0.1:8000`.
 
-[Add more detailed architecture as you build]
+### Frontend Setup
 
-## Learning Goals
+1.  **Navigate to the frontend directory:**
+    ```bash
+    cd frontend
+    ```
 
-This project is designed to teach:
-- [List main concepts you want to learn]
-- API development
-- Frontend/backend integration
-- Database design
-- Testing strategies
-- Deployment practices
+2.  **Install the required npm packages:**
+    ```bash
+    npm install
+    ```
 
-## Session Log
+3.  **Run the React development server:**
+    ```bash
+    npm run dev
+    ```
+    The frontend will be running at `http://localhost:5173` and will connect to the backend service.
 
-### Session [N] - [Date]
-**Goal:** [What you planned to accomplish]
-**Completed:** [What you actually built]
-**Learned:** [Key concepts mastered]
-**Next:** [What's planned for next session]
+### How to Use
 
-[Add entry for each development session]
-
-## Usage (Once Complete)
-
-1. Describe your research in the input form
-2. Upload supporting documents (optional)
-3. Review automated patent search results
-4. Examine risk assessment and recommendations
-5. Download comprehensive FTO report
-
-## License
-
-[Choose appropriate license - MIT recommended for learning projects]
+1.  Open your web browser and navigate to the frontend URL (e.g., `http://localhost:5173`).
+2.  Fill out the "Analyze Your Research" form with your research details.
+3.  Click "Analyze Patent Landscape" to submit your research for analysis.
+4.  The application will display a loading screen while it searches for and analyzes patents.
+5.  Once complete, you can view the risk assessment, patent details, and recommendations in the results view.
