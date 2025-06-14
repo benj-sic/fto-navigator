@@ -23,7 +23,7 @@ report_generator = ReportGenerator()
 app = FastAPI(
     title="FTO Navigator API",
     description="Patent freedom-to-operate analysis for researchers",
-    version="0.2.0"
+    version="0.3.0" # Version bump for new features
 )
 
 # Configure CORS
@@ -45,6 +45,7 @@ class ResearchInput(BaseModel):
     field_of_study: str = Field(..., description="e.g., 'Biotechnology', 'Software', 'Mechanical'")
     keywords: list[str] = Field(..., min_items=1, max_items=10, description="Key technical terms")
     researcher_name: Optional[str] = Field(None, description="Your name (optional)")
+    jurisdiction: str = Field('US', description="The patent jurisdiction to search (e.g., 'US', 'EP', 'WO')")
 
 # Response model for analysis results
 class AnalysisResponse(BaseModel):
@@ -87,8 +88,12 @@ async def analyze_research(research: ResearchInput, db: Session = Depends(get_db
     db.add(db_analysis)
     db.commit()
     
-    # Search for relevant patents
-    patent_results = await patent_service.search_patents(research.keywords)
+    # Search for relevant patents, now with jurisdiction
+    patent_results = await patent_service.search_patents(
+        keywords=research.keywords,
+        field_of_study=research.field_of_study,
+        jurisdiction=research.jurisdiction
+    )
     
     # Update database with results
     if patent_results["success"]:
@@ -106,7 +111,7 @@ async def analyze_research(research: ResearchInput, db: Session = Depends(get_db
         return AnalysisResponse(
             analysis_id=analysis_id,
             status="completed",
-            message=f"Found {patent_results['count']} potentially relevant patents",
+            message=f"Found {patent_results['count']} potentially relevant patents in {research.jurisdiction}",
             patent_count=patent_results["count"],
             top_patents=patent_results["patents"][:5]  # Return top 5 patents
         )
@@ -116,7 +121,7 @@ async def analyze_research(research: ResearchInput, db: Session = Depends(get_db
             status="error",
             message=f"Patent search failed: {patent_results['error']}"
         )
-
+    
 # New endpoint to retrieve analysis results
 @app.get("/api/analyses/{analysis_id}")
 def get_analysis(analysis_id: str, db: Session = Depends(get_db)):

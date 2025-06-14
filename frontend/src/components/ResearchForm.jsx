@@ -9,7 +9,8 @@ const ResearchForm = ({ onAnalysisComplete, onLoadingStart }) => {
     description: '',
     field_of_study: 'Biotechnology',
     keywords: '',
-    researcher_name: ''
+    researcher_name: '',
+    jurisdiction: 'US' // Default jurisdiction
   });
 
   const [errors, setErrors] = useState({});
@@ -21,6 +22,16 @@ const ResearchForm = ({ onAnalysisComplete, onLoadingStart }) => {
     'Electrical',
     'Chemical',
     'Medical'
+  ];
+
+  // Common patent jurisdictions
+  const jurisdictions = [
+      { code: 'US', name: 'United States' },
+      { code: 'EP', name: 'Europe' },
+      { code: 'WO', name: 'WIPO (PCT)' },
+      { code: 'CN', name: 'China' },
+      { code: 'JP', name: 'Japan' },
+      { code: 'KR', name: 'South Korea' },
   ];
 
   const validateForm = () => {
@@ -137,7 +148,7 @@ const ResearchForm = ({ onAnalysisComplete, onLoadingStart }) => {
           </div>
           {errors.description && <span className="error-message">{errors.description}</span>}
         </div>
-
+        
         <div className="form-group">
           <label htmlFor="field_of_study">
             Field of Study <span className="required">*</span>
@@ -150,6 +161,23 @@ const ResearchForm = ({ onAnalysisComplete, onLoadingStart }) => {
           >
             {fields.map(field => (
               <option key={field} value={field}>{field}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* NEW JURISDICTION FIELD */}
+        <div className="form-group">
+          <label htmlFor="jurisdiction">
+            Jurisdiction <span className="required">*</span>
+          </label>
+          <select
+            id="jurisdiction"
+            name="jurisdiction"
+            value={formData.jurisdiction}
+            onChange={handleChange}
+          >
+            {jurisdictions.map(j => (
+              <option key={j.code} value={j.code}>{j.name} ({j.code})</option>
             ))}
           </select>
         </div>
@@ -193,14 +221,14 @@ const ResearchForm = ({ onAnalysisComplete, onLoadingStart }) => {
       </form>
 
       <div className="form-info">
-        <h3>What happens next?</h3>
-        <ul>
-          <li>We'll search the USPTO database for relevant patents</li>
-          <li>Analyze potential conflicts with your research</li>
-          <li>Generate a risk assessment report</li>
-          <li>Provide actionable recommendations</li>
-        </ul>
-      </div>
+  <h3>What happens next?</h3>
+  <ul>
+    <li>We'll search the selected patent database (e.g., USPTO, EPO) for relevant active patents.</li>
+    <li>Analyze potential conflicts with your research.</li>
+    <li>Generate a risk assessment report.</li>
+    <li>Provide actionable recommendations.</li>
+  </ul>
+</div>
     </div>
   );
 };

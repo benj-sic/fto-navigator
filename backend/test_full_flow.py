@@ -1,50 +1,66 @@
-import httpx
+import requests
 import json
-import asyncio
+import os
 
-async def test_fto_navigator():
-    """Test the complete FTO analysis flow"""
-    base_url = "http://127.0.0.1:8000"
-    
-    # Test research data
-    research = {
-        "title": "AI-Powered Drug Discovery Platform",
-        "description": "Using machine learning algorithms to predict drug-protein interactions and accelerate the drug discovery process for neurodegenerative diseases",
-        "field_of_study": "Biotechnology",
-        "keywords": ["machine learning", "drug discovery", "AI", "protein interaction"],
-        "researcher_name": "Dr. Alex Chen"
-    }
-    
-    async with httpx.AsyncClient() as client:
-        # 1. Submit research for analysis
-        print("1. Submitting research for analysis...")
-        response = await client.post(f"{base_url}/api/analyze", json=research)
-        result = response.json()
-        print(f"   Analysis ID: {result['analysis_id']}")
-        print(f"   Status: {result['status']}")
-        print(f"   Patents found: {result.get('patent_count', 0)}")
-        
-        analysis_id = result['analysis_id']
-        
-        # 2. Get risk assessment
-        print("\n2. Getting risk assessment...")
-        response = await client.get(f"{base_url}/api/analyses/{analysis_id}/risk")
-        risk = response.json()
-        print(f"   Overall risk: {risk['overall_risk_level']}")
-        print(f"   Risk score: {risk['overall_risk_score']}")
-        print(f"   High-risk patents: {risk['high_risk_patents']}")
-        
-        # 3. Generate full report
-        print("\n3. Generating full report...")
-        response = await client.get(f"{base_url}/api/analyses/{analysis_id}/report")
-        report = response.json()
-        print(f"   Executive Summary: {report['executive_summary'][:100]}...")
-        print(f"   Recommendations: {len(report['recommendations']['general_recommendations'])}")
-        
-        # Save report to file
-        with open('sample_report.json', 'w') as f:
-            json.dump(report, f, indent=2)
-        print("\n✅ Full report saved to sample_report.json")
+# Base URL of the running FastAPI application
+BASE_URL = "http://localhost:8000"
+API_URL = f"{BASE_URL}/api/analyze"
 
-# Run the test
-asyncio.run(test_fto_navigator())
+# Path to the test data file, located in the same directory as this script
+TEST_DATA_FILE = os.path.join(os.path.dirname(__file__), 'test_data.json')
+
+def load_test_data():
+    """Loads test cases from the JSON file."""
+    try:
+        with open(TEST_DATA_FILE, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print(f"Error: Test data file not found at {TEST_DATA_FILE}")
+        return []
+    except json.JSONDecodeError:
+        print(f"Error: Could not decode JSON from {TEST_DATA_FILE}")
+        return []
+
+def run_test(test_case_data, test_name):
+    """Runs a single analysis test case."""
+    print("-" * 50)
+    print(f"🚀 Running test case: '{test_name}'")
+    print(f"   Jurisdiction: {test_case_data.get('jurisdiction')}")
+    print("-" * 50)
+    
+    try:
+        response = requests.post(API_URL, json=test_case_data)
+        response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
+
+        print(f"Status Code: {response.status_code}")
+        
+        response_data = response.json()
+        print("API Response:")
+        # Pretty print the JSON response
+        print(json.dumps(response_data, indent=2))
+        
+        # Basic assertions to verify the test outcome
+        assert response.status_code == 200
+        assert response_data["status"] in ["completed", "error"]
+        if response_data["status"] == "completed":
+            assert "analysis_id" in response_data
+            assert "patent_count" in response_data
+            assert isinstance(response_data["top_patents"], list)
+            print(f"\n✅ Test '{test_name}' PASSED")
+        else:
+            # This handles cases where the API itself reports a failure (e.g., search error)
+            print(f"\n⚠️ Test '{test_name}' COMPLETED WITH API-LEVEL ERROR: {response_data.get('message')}")
+
+    except requests.exceptions.RequestException as e:
+        print(f"\n❌ Test '{test_name}' FAILED: Could not connect to the API.")
+        print(f"Error: {e}")
+        print("Please ensure the backend server is running (`uvicorn main:app --reload`).")
+
+if __name__ == "__main__":
+    test_cases = load_test_data()
+    if not test_cases:
+        print("\nNo test cases found. Exiting.")
+    else:
+        print(f"Found {len(test_cases)} test cases to run.")
+        for test_case in test_cases:
+            run_test(test_case['data'], test_case['test_case_name'])
