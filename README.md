@@ -17,6 +17,8 @@ FTO Navigator is a web-based tool designed to help researchers perform Freedom-t
 -   **PDF Generation**: jsPDF, jspdf-autotable
 
 ## 📂 Project Structure
+
+```
 /
 ├── backend/         # FastAPI backend
 │   ├── main.py      # Main application entrypoint
