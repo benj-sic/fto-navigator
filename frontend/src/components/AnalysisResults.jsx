@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { api } from '../config';
 import { FaDownload, FaExclamationTriangle, FaCheckCircle, FaInfoCircle } from 'react-icons/fa';
+import { generatePDFReport } from './PDFGenerator';
 
 const AnalysisResults = ({ analysisId, initialData, onNewAnalysis }) => {
   const [riskData, setRiskData] = useState(null);
@@ -29,7 +30,7 @@ const AnalysisResults = ({ analysisId, initialData, onNewAnalysis }) => {
     }
   };
 
-  const downloadReport = () => {
+  const downloadJSON = () => {
     const dataStr = JSON.stringify(reportData, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
     
@@ -39,6 +40,10 @@ const AnalysisResults = ({ analysisId, initialData, onNewAnalysis }) => {
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportFileDefaultName);
     linkElement.click();
+  };
+  
+  const downloadPDF = () => {
+    generatePDFReport(reportData, riskData);
   };
 
   const getRiskIcon = (level) => {
@@ -65,12 +70,15 @@ const AnalysisResults = ({ analysisId, initialData, onNewAnalysis }) => {
       <div className="results-header">
         <h2>FTO Analysis Complete</h2>
         <div className="header-actions">
-          <button onClick={downloadReport} className="download-button">
-            <FaDownload /> Download Report
-          </button>
-          <button onClick={onNewAnalysis} className="new-analysis-button">
-            New Analysis
-          </button>
+            <button onClick={downloadPDF} className="download-button">
+                <FaDownload /> Download PDF
+            </button>
+            <button onClick={downloadJSON} className="download-button secondary">
+                <FaDownload /> Download JSON
+            </button>
+            <button onClick={onNewAnalysis} className="new-analysis-button">
+                New Analysis
+            </button>
         </div>
       </div>
 

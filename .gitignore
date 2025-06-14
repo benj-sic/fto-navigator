@@ -1,1 +1,4 @@
 .env
+
+# Google Cloud Service Account Key
+google-cloud-key.json

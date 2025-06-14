@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
 from datetime import datetime
@@ -23,6 +24,15 @@ app = FastAPI(
     title="FTO Navigator API",
     description="Patent freedom-to-operate analysis for researchers",
     version="0.2.0"
+)
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:3000"],  # Frontend URLs
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
 )
 
 # Initialize patent search service
@@ -143,10 +153,12 @@ def generate_report(analysis_id: str, db: Session = Depends(get_db)):
     if not analysis:
         raise HTTPException(status_code=404, detail="Analysis not found")
     
-    # Get patent results
+    # Get patent results - handle None case
     patents = analysis.get_patent_results()
-    if not patents:
-        raise HTTPException(status_code=400, detail="No patent results available")
+    
+    # Don't raise error if no patents - just use empty list
+    if patents is None:
+        patents = []
     
     # Prepare research data
     research_data = {
@@ -157,7 +169,7 @@ def generate_report(analysis_id: str, db: Session = Depends(get_db)):
         "researcher_name": analysis.researcher_name
     }
     
-    # Run risk assessment
+    # Run risk assessment (will handle empty patents)
     risk_assessment = risk_service.assess_patents(research_data, patents)
     
     # Generate report
