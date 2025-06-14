@@ -1,120 +1,115 @@
 import httpx
-from typing import List, Dict
+import os
+from typing import List, Dict, Optional
+from dotenv import load_dotenv
 import asyncio
-from datetime import datetime, timezone
-import json
+
+# Load environment variables
+load_dotenv()
 
 class PatentSearchService:
-    """Handles patetn searches using free APIs"""
-
     def __init__(self):
-        # We'll use USPTO's PatentsView API (free, no key required)
-        self.base_url = "https://api.patentsview.org/patents/query"
-        self.timeout = 30.0
-
-    async def search_patents(self, keywords: List[str], field_of_study: str) -> Dict:
+        self.api_key = os.getenv("USPTO_API_KEY")
+        self.api_url = os.getenv("USPTO_API_URL")
+        
+        if not self.api_key:
+            raise ValueError("USPTO_API_KEY not found in environment variables")
+    
+    async def search_patents(self, keywords: List[str], limit: int = 10) -> Dict:
         """
-        Search for patents based on keywords
-        Return simplified patent data
+        Search USPTO for patents based on keywords
+        Returns simplified patent data for FTO analysis
         """
-        print(f"Starting patent search for keywords: {keywords}") # Debug log
-        # Build query - search in title and abstract
-        query_terms = " OR ".join([f'"{keyword}"' for keyword in keywords])
-
-        # PatentsView API query format
-        query = {
-            "q": {
-                " or": [
-                    {"_text_any": {"patent_title": query_terms}},
-                    {"_text_any": {"patent_abstract": query_terms}}
-                ]
-            },
-             "f": [
-                "patent_number",
-                "patent_title",
-                "patent_date",
-                "patent_abstract",
-                "inventor_last_name",
-                "assignee_organization"
-            ],
-            "o": {
-                "per_page": 10 # Limit results for MVP
-            }
+        # Build search query from keywords
+        search_query = " OR ".join(keywords)
+        
+        # USPTO API parameters
+        params = {
+            "titleText": search_query,  # Search in patent titles
+            "statusCodeBag": "150",  # Only granted patents
+            "rowCount": str(limit),
+            "sortBy": "grantDate",
+            "sortOrder": "desc"
         }
-
-        print(f"Query being sent: {json.dumps(query, indent=2)}") # Debug log
-
+        
+        headers = {
+            "X-API-Key": self.api_key,
+            "Accept": "application/json"
+        }
+        
         try:
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
-                response = await client.post(
-                    self.base_url,
-                    json=query,
-                    headers={"Content-Type": "application/json"}
-                )    
-
-                print(f"Response status: {response.status_code}") # Debug log
-
-                if response.status_code == 200:
-                    data = response.json()
-                    print(f"Response data keys: {data.keys()}") # Debug log
-
-                    # Transform the results into our format
-                    patents = []
-                    if "patents" in data:
-                        print(f"Found {len(data['patents'])} patents") # Debug log
-                        for patent in data["patents"]:
-                            patents.append({
-                                "patent_number": patent.get("patent_number", "Unknown"),
-                                "title": patent.get("patent_title", "No title"),
-                                "date": patent.get("patent_date", "Unknown date"),
-                                "abstract": patent.get("patent_abstract", "No abstract available"),
-                                "relevance_score": self._calculate_relevance(patent, keywords),
-                                "assignee": patent.get("assignee_organization", ["Unknown"])[0] if patent.get("assignee_organization") else "Unknown"
-                            })
-
-                    # Sort by relevance
-                    patents.sort(key=lambda x: x["relevance_score"], reverse=True)
-
-                    return {
-                        "status": "success",
-                        "total_found": data.get("total_patent_count", 0),
-                        "patents": patents[:5], # Top 5 most relevant
-                        "search_timestamp": datetime.now(timezone.utc).isoformat()
-                    }
-                else:
-                    return {
-                        "status": "error",
-                        "message": f"Patent search failed with status {response.status_code}",
-                        "patents": []
-                    }
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(
+                    self.api_url,
+                    params=params,
+                    headers=headers
+                )
+                response.raise_for_status()
                 
-        except httpx.TimeoutException:
-            print("Patent search timed out") # Debug log
+                data = response.json()
+                
+                # Extract relevant patent information
+                simplified_results = self._simplify_patent_data(data)
+                
+                return {
+                    "success": True,
+                    "count": data.get("count", 0),
+                    "patents": simplified_results,
+                    "search_query": search_query
+                }
+                
+        except httpx.HTTPError as e:
             return {
-                "status": "error",
-                "message": "Patent search timed out - try fewer keywords",
+                "success": False,
+                "error": f"USPTO API error: {str(e)}",
                 "patents": []
             }
         except Exception as e:
-            print(f"Patent search error: {type(e).__name__}: {str(e)}") # Debug log
             return {
-                "status": "error",
-                "message": f"Patent search error: {str(e)}",
+                "success": False,
+                "error": f"Unexpected error: {str(e)}",
                 "patents": []
             }
     
-    def _calculate_relevance(self, patent: Dict, keywords: List[str]) -> float:
-        """Simple relevance scoring based on keyword matches"""
-        score = 0.0
-        title = patent.get("patent_title", "").lower()
-        abstract = patent.get("patent_abstract", "").lower()
-
-        for keyword in keywords:
-            keyword_lower = keyword.lower()
-            # Title matches are worth more
-            if keyword_lower in title:
-                score += 2.0
-            if keyword_lower in abstract:
-                score += 1.0
+    def _simplify_patent_data(self, raw_data: Dict) -> List[Dict]:
+        """Extract key information from USPTO response"""
+        simplified_patents = []
         
-        return score
+        patents = raw_data.get("patentFileWrapperDataBag", [])
+        
+        for patent in patents[:10]:  # Limit to 10 results
+            meta = patent.get("applicationMetaData", {})
+            
+            # Extract key fields for FTO analysis
+            simplified = {
+                "patent_number": meta.get("patentNumber", "N/A"),
+                "application_number": patent.get("applicationNumberText", "N/A"),
+                "title": meta.get("inventionTitle", "No title"),
+                "grant_date": meta.get("grantDate", "N/A"),
+                "status": meta.get("applicationStatusDescriptionText", "Unknown"),
+                "applicants": self._extract_applicants(meta),
+                "inventors": self._extract_inventors(meta),
+                "classifications": meta.get("cpcClassificationBag", [])[:5],  # Top 5 classifications
+                "filing_date": meta.get("filingDate", "N/A"),
+                "field": meta.get("class", "N/A")
+            }
+            
+            simplified_patents.append(simplified)
+        
+        return simplified_patents
+    
+    def _extract_applicants(self, meta: Dict) -> List[str]:
+        """Extract applicant names"""
+        applicants = []
+        for applicant in meta.get("applicantBag", []):
+            name = applicant.get("applicantNameText", "Unknown")
+            applicants.append(name)
+        return applicants[:3]  # Limit to 3 applicants
+    
+    def _extract_inventors(self, meta: Dict) -> List[str]:
+        """Extract inventor names"""
+        inventors = []
+        for inventor in meta.get("inventorBag", []):
+            name = inventor.get("inventorNameText", "Unknown")
+            inventors.append(name)
+        return inventors[:3]  # Limit to 3 inventors

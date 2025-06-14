@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV '/Users/benjaminsiciliano/Library/Mobile Documents/com~apple~CloudDocs/Documents/Work/FTO-Navigator/fto-navigator/venv'
+set -gx VIRTUAL_ENV /Users/benjaminsiciliano/Documents/Projects/FTO-Navigator/fto-navigator/venv
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/"bin $PATH
