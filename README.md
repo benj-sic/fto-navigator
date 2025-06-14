@@ -30,6 +30,7 @@ FTO Navigator is a web-based tool designed to help researchers perform Freedom-t
 │   │   └── ...
 │   └── ...
 └── README.md
+```
 
 ## 🚀 Getting Started
 
