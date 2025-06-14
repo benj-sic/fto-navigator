@@ -10,6 +10,14 @@ import json
 from database import get_db, ResearchAnalysis
 from patent_service import PatentSearchService
 
+# Add these imports after the existing ones
+from risk_assessment import RiskAssessmentService
+from report_generator import ReportGenerator
+
+# Initialize services after patent_service
+risk_service = RiskAssessmentService()
+report_generator = ReportGenerator()
+
 # Create our FastAPI application
 app = FastAPI(
     title="FTO Navigator API",
@@ -122,6 +130,62 @@ def get_analysis(analysis_id: str, db: Session = Depends(get_db)):
         "patent_count": analysis.patent_count,
         "patents": patents
     }
+
+# Add this endpoint after the get_analysis endpoint
+
+@app.get("/api/analyses/{analysis_id}/report")
+def generate_report(analysis_id: str, db: Session = Depends(get_db)):
+    """Generate a comprehensive FTO report for an analysis"""
+    analysis = db.query(ResearchAnalysis).filter(
+        ResearchAnalysis.analysis_id == analysis_id
+    ).first()
+    
+    if not analysis:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+    
+    # Get patent results
+    patents = analysis.get_patent_results()
+    if not patents:
+        raise HTTPException(status_code=400, detail="No patent results available")
+    
+    # Prepare research data
+    research_data = {
+        "analysis_id": analysis.analysis_id,
+        "title": analysis.title,
+        "field_of_study": analysis.field_of_study,
+        "keywords": analysis.get_keywords(),
+        "researcher_name": analysis.researcher_name
+    }
+    
+    # Run risk assessment
+    risk_assessment = risk_service.assess_patents(research_data, patents)
+    
+    # Generate report
+    report = report_generator.generate_report(research_data, risk_assessment)
+    
+    return report
+
+@app.get("/api/analyses/{analysis_id}/risk")
+def get_risk_assessment(analysis_id: str, db: Session = Depends(get_db)):
+    """Get just the risk assessment for an analysis"""
+    analysis = db.query(ResearchAnalysis).filter(
+        ResearchAnalysis.analysis_id == analysis_id
+    ).first()
+    
+    if not analysis:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+    
+    patents = analysis.get_patent_results()
+    
+    research_data = {
+        "title": analysis.title,
+        "field_of_study": analysis.field_of_study,
+        "keywords": analysis.get_keywords()
+    }
+    
+    risk_assessment = risk_service.assess_patents(research_data, patents or [])
+    
+    return risk_assessment
 
 # List all analyses (useful for testing)
 @app.get("/api/analyses")
